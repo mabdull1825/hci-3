@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hackney Map with Distances</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet/dist/leaflet.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { width: 100%; height: 100vh; }
+        .legend {
+            background: white;
+            padding: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        .legend span {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+            text-align: center;
+            line-height: 30px;
+            border-radius: 50%;
+        }
+        .shelter { border: 2px solid #4CAF50; color: #4CAF50; }
+        .hospital { border: 2px solid #FF0000; color: #FF0000; }
+        .food { border: 2px solid #FFA500; color: #FFA500; }
+        .toilet { border: 2px solid #0000FF; color: #0000FF; }
+        .job { border: 2px solid #FF1493; color: #FF1493; }
+        .user { border: 2px solid #000000; color: #000000; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        var map = L.map('map').setView([51.5465, -0.0615], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        var userLocation = [51.5465, -0.0615];
+
+        var shelterIcon = L.divIcon({
+            html: '<div style="border: 2px solid #4CAF50; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: white;"><span style="font-size: 16px; color: #4CAF50;">🏠</span></div>',
+            className: 'custom-shelter-icon',
+            iconSize: [30, 30]
+        });
+
+        var hospitalIcon = L.divIcon({
+            html: '<div style="border: 2px solid #FF0000; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: white;"><span style="font-size: 16px; color: #FF0000;">➕</span></div>',
+            className: 'custom-hospital-icon',
+            iconSize: [30, 30]
+        });
+
+        var foodIcon = L.divIcon({
+            html: '<div style="border: 2px solid #FFA500; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: white;"><span style="font-size: 16px; color: #FFA500;">🍴</span></div>',
+            className: 'custom-food-icon',
+            iconSize: [30, 30]
+        });
+
+        var toiletIcon = L.divIcon({
+            html: '<div style="border: 2px solid #0000FF; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: white;"><span style="font-size: 16px; color: #0000FF;">🚻</span></div>',
+            className: 'custom-toilet-icon',
+            iconSize: [30, 30]
+        });
+
+        var jobIcon = L.divIcon({
+            html: '<div style="border: 2px solid #FF1493; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: white;"><span style="font-size: 16px; color: #FF1493;">💼</span></div>',
+            className: 'custom-job-icon',
+            iconSize: [30, 30]
+        });
+
+        var userIcon = L.divIcon({
+            html: '<div style="border: 2px solid #000000; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: white;"><span style="font-size: 16px; color: #000000;">📍</span></div>',
+            className: 'custom-user-icon',
+            iconSize: [30, 30]
+        });
+
+        L.marker(userLocation, { icon: userIcon }).addTo(map).bindPopup('<strong>Your Location</strong>');
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            function toRad(value) {
+                return value * Math.PI / 180;
+            }
+            var R = 6371;
+            var dLat = toRad(lat2 - lat1);
+            var dLon = toRad(lon2 - lon1);
+            var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            var d = R * c;
+            return d.toFixed(2);
+        }
+
+        var locations = [
+            { type: 'Shelter', coords: [51.5600, -0.0400], icon: shelterIcon },
+            { type: 'Shelter', coords: [51.5350, -0.0900], icon: shelterIcon },
+            { type: 'Shelter', coords: [51.5700, -0.0500], icon: shelterIcon },
+            { type: 'Shelter', coords: [51.5500, -0.1000], icon: shelterIcon },
+            { type: 'Shelter', coords: [51.5450, -0.0300], icon: shelterIcon },
+
+            { type: 'Hospital', coords: [51.5750, -0.0600], icon: hospitalIcon },
+            { type: 'Hospital', coords: [51.5250, -0.0700], icon: hospitalIcon },
+            { type: 'Hospital', coords: [51.5400, -0.1100], icon: hospitalIcon },
+            { type: 'Hospital', coords: [51.5550, -0.0200], icon: hospitalIcon },
+            { type: 'Hospital', coords: [51.5300, -0.0950], icon: hospitalIcon },
+
+            { type: 'Food Bank', coords: [51.5480, -0.0400], icon: foodIcon },
+            { type: 'Food Bank', coords: [51.5200, -0.0850], icon: foodIcon },
+            { type: 'Food Bank', coords: [51.5600, -0.0500], icon: foodIcon },
+            { type: 'Food Bank', coords: [51.5350, -0.0300], icon: foodIcon },
+            { type: 'Food Bank', coords: [51.5550, -0.0750], icon: foodIcon },
+
+            { type: 'Public Toilet', coords: [51.5600, -0.0200], icon: toiletIcon },
+            { type: 'Public Toilet', coords: [51.5300, -0.0500], icon: toiletIcon },
+            { type: 'Public Toilet', coords: [51.5200, -0.0300], icon: toiletIcon },
+            { type: 'Public Toilet', coords: [51.5250, -0.1100], icon: toiletIcon },
+            { type: 'Public Toilet', coords: [51.5450, -0.0900], icon: toiletIcon },
+            
+            { type: 'Job Centre', coords: [51.5500, -0.0200], icon: jobIcon },
+            { type: 'Job Centre', coords: [51.5700, -0.0700], icon: jobIcon },
+            { type: 'Job Centre', coords: [51.5200, -0.1000], icon: jobIcon },
+            { type: 'Job Centre', coords: [51.5300, -0.0400], icon: jobIcon },
+            { type: 'Job Centre', coords: [51.5500, -0.0200], icon: jobIcon }
+
+        ];
+
+        locations.forEach(function(location) {
+            var distance = calculateDistance(userLocation[0], userLocation[1], location.coords[0], location.coords[1]);
+            L.marker(location.coords, { icon: location.icon }).addTo(map).bindPopup('<strong>' + location.type + '</strong><br>Distance: ' + distance + ' km');
+        });
+
+        var legend = L.control({ position: 'bottomright' });
+
+        legend.onAdd = function(map) {
+            var div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <div><span class="shelter">🏠</span> Shelter</div>
+                <div><span class="hospital">➕</span> Hospital</div>
+                <div><span class="food">🍴</span> Food Bank</div>
+                <div><span class="toilet">🚻</span> Public Toilet</div>
+                <div><span class="job">💼</span> Job Centre</div>
+                <div><span class="user">📍</span> Your Location</div>
+            `;
+            return div;
+        };
+
+        legend.addTo(map);
+    </script>
+</body>
+</html>
